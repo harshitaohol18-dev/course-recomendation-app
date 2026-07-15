@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CourseCompass — Find Your Path</title>
+<link href="https://fonts.googleapis.com/css2?family=Clash+Display:wght@400;500;600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0118;--bg2:#0d0a2e;
+  --v:#8b5cf6;--v2:#a78bfa;--pk:#ec4899;--cy:#06b6d4;--em:#10b981;--am:#f59e0b;--rd:#ef4444;
+  --g1:rgba(255,255,255,.04);--g2:rgba(255,255,255,.07);--g3:rgba(255,255,255,.10);--g4:rgba(255,255,255,.18);
+  --gv:rgba(139,92,246,.35);
+  --t:#f1f5f9;--t2:#94a3b8;--t3:#475569;
+  --fh:'Clash Display','Outfit',sans-serif;--fb:'Outfit',sans-serif;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--fb);font-size:14px;color:var(--t);min-height:100vh;overflow-x:hidden;
+  background:radial-gradient(ellipse 80% 60% at 20% 10%,rgba(139,92,246,.18),transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 80%,rgba(236,72,153,.12),transparent 55%),
+    radial-gradient(ellipse 50% 40% at 60% 30%,rgba(6,182,212,.10),transparent 50%),
+    linear-gradient(135deg,var(--bg),var(--bg2),#050d1a);background-attachment:fixed;}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:rgba(139,92,246,.4);border-radius:4px}* {scrollbar-width:thin;scrollbar-color:rgba(139,92,246,.4) transparent;}
+.orb{position:fixed;border-radius:50%;filter:blur(80px);pointer-events:none;z-index:0;animation:orbF 14s ease-in-out infinite}
+.orb1{width:500px;height:500px;background:rgba(139,92,246,.12);top:-150px;left:-100px}
+.orb2{width:400px;height:400px;background:rgba(236,72,153,.10);bottom:10%;right:-80px;animation-duration:18s;animation-delay:-6s}
+.orb3{width:350px;height:350px;background:rgba(6,182,212,.08);top:40%;left:30%;animation-duration:20s;animation-delay:-3s}
+@keyframes orbF{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(40px,-30px) scale(1.05)}66%{transform:translate(-20px,20px) scale(.97)}}
+header{position:sticky;top:0;z-index:200;padding:12px 0;background:rgba(10,1,24,.6);backdrop-filter:blur(28px);border-bottom:1px solid var(--g3)}
+.hw{max-width:1300px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;gap:14px;position:relative;z-index:1}
+.logo{font-family:var(--fh);font-size:19px;font-weight:700;display:flex;align-items:center;gap:8px}
+.li{width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,var(--v),var(--pk));display:flex;align-items:center;justify-content:center;font-size:15px;box-shadow:0 0 18px var(--gv)}
+.lt{background:linear-gradient(90deg,var(--v2),var(--pk));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.tabs{display:flex;gap:4px;padding:4px;background:var(--g1);border:1px solid var(--g3);border-radius:13px}
+.tab{padding:7px 17px;border-radius:9px;font-size:12px;font-weight:500;color:var(--t2);cursor:pointer;border:none;background:none;font-family:var(--fb);transition:all .2s;letter-spacing:.2px}
+.tab:hover{color:var(--t)}
+.tab.on{background:linear-gradient(135deg,var(--v),var(--pk));color:#fff;box-shadow:0 3px 16px var(--gv)}
+.wrap{max-width:1300px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+#vb,#va,#vm{display:none}
+#vb.on,#va.on,#vm.on{display:block}
+
+/* BROWSE */
+.hero{padding:68px 0 44px;text-align:center}
+.bdg{display:inline-flex;align-items:center;gap:6px;background:var(--g1);border:1px solid rgba(139,92,246,.3);border-radius:24px;padding:5px 14px;font-size:11px;font-weight:500;color:var(--v2);margin-bottom:20px;backdrop-filter:blur(10px)}
+.bdg::before{content:'✦';font-size:9px}
+.hero h1{font-family:var(--fh);font-size:clamp(34px,5vw,64px);font-weight:700;line-height:1;letter-spacing:-2px;margin-bottom:14px}
+.grad{background:linear-gradient(135deg,var(--v2),var(--pk),var(--cy));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.hero p{color:var(--t2);font-size:15px;max-width:440px;margin:0 auto 28px;line-height:1.65;font-weight:300}
+.sw{position:relative;max-width:620px;margin:0 auto}
+.sg{position:absolute;inset:-2px;border-radius:24px;background:linear-gradient(135deg,var(--v),var(--pk),var(--cy));z-index:0;opacity:0;transition:opacity .3s;filter:blur(1px)}
+.sw:focus-within .sg{opacity:.55}
+.si{position:relative;z-index:1;display:flex;align-items:center;gap:10px;background:rgba(10,1,24,.8);backdrop-filter:blur(28px);border:1px solid var(--g4);border-radius:22px;padding:9px 9px 9px 20px}
+.sw:focus-within .si{border-color:transparent}
+.si input{flex:1;background:none;border:none;outline:none;color:var(--t);font-family:var(--fb);font-size:14px}
+.si input::placeholder{color:var(--t3)}
+.sbtn{padding:9px 22px;border-radius:14px;border:none;background:linear-gradient(135deg,var(--v),var(--pk));color:#fff;font-family:var(--fh);font-size:12px;font-weight:600;cursor:pointer;box-shadow:0 3px 16px var(--gv)}
+.sbtn:hover{transform:translateY(-1px)}
+.ss{display:flex;justify-content:center;max-width:480px;margin:34px auto 0;background:var(--g1);border:1px solid var(--g3);border-radius:22px;overflow:hidden}
+.si2{flex:1;padding:15px 0;text-align:center;border-right:1px solid var(--g3)}
+.si2:last-child{border-right:none}
+.sn{font-family:var(--fh);font-size:24px;font-weight:700;background:linear-gradient(135deg,var(--v2),var(--pk));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.sl{font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:1.2px;margin-top:2px}
+.fs{padding:26px 0 0}
+.fr{display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin-bottom:9px}
+.fl{font-size:10px;text-transform:uppercase;letter-spacing:1.4px;color:var(--t3);font-weight:600}
+.pill{padding:5px 12px;border-radius:22px;font-size:11px;font-weight:500;border:1px solid var(--g3);color:var(--t2);cursor:pointer;background:var(--g1);font-family:var(--fb);transition:all .15s}
+.pill:hover{border-color:var(--g4);color:var(--t)}
+.pill.ac{background:linear-gradient(135deg,rgba(139,92,246,.22),rgba(236,72,153,.18));border-color:rgba(139,92,246,.5);color:var(--v2)}
+.pill.ac2{background:linear-gradient(135deg,rgba(6,182,212,.18),rgba(16,185,129,.13));border-color:rgba(6,182,212,.5);color:var(--cy)}
+.avr{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:11px 16px;background:var(--g1);border:1px solid var(--g3);border-radius:14px;margin-bottom:20px;font-size:11px;color:var(--t2)}
+.avr select{background:rgba(255,255,255,.05);border:1px solid var(--g4);color:var(--t);border-radius:8px;padding:6px 10px;font-family:var(--fb);font-size:11px;outline:none;cursor:pointer}
+.avr select option{background:#0d0a2e}
+.rg{display:flex;align-items:center;gap:7px}
+.rv{font-weight:600;color:var(--v2);min-width:30px;font-size:12px}
+input[type=range]{-webkit-appearance:none;appearance:none;width:88px;height:2px;background:rgba(255,255,255,.1);border-radius:2px;outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:13px;height:13px;border-radius:50%;background:linear-gradient(135deg,var(--v),var(--pk));cursor:pointer}
+.rc{margin-left:auto;padding:4px 10px;background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.25);border-radius:12px;font-size:11px;color:var(--v2);font-weight:500}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(285px,1fr));gap:14px;padding-bottom:60px}
+.card{background:var(--g1);backdrop-filter:blur(22px);border:1px solid var(--g3);border-radius:18px;padding:19px;display:flex;flex-direction:column;gap:10px;cursor:pointer;transition:transform .2s,border-color .2s,box-shadow .2s;position:relative;overflow:hidden;animation:cin .38s ease both}
+@keyframes cin{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.1),transparent)}
+.card:hover{transform:translateY(-4px);border-color:rgba(139,92,246,.3);box-shadow:0 16px 48px rgba(0,0,0,.4)}
+.ch{display:flex;justify-content:space-between;align-items:flex-start;gap:6px}
+.plt{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;padding:3px 8px;border-radius:5px;background:rgba(255,255,255,.05);border:1px solid var(--g4);color:var(--t2)}
+.lv{font-size:9px;font-weight:600;text-transform:uppercase;padding:3px 8px;border-radius:5px;white-space:nowrap}
+.lv.B{background:rgba(16,185,129,.12);color:var(--em);border:1px solid rgba(16,185,129,.25)}
+.lv.I{background:rgba(245,158,11,.12);color:var(--am);border:1px solid rgba(245,158,11,.25)}
+.lv.A{background:rgba(236,72,153,.12);color:var(--pk);border:1px solid rgba(236,72,153,.25)}
+.ccat{font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--t3);font-weight:600}
+.ctit{font-family:var(--fh);font-size:15px;font-weight:600;line-height:1.3}
+.tags{display:flex;flex-wrap:wrap;gap:4px}
+.tag{font-size:10px;padding:2px 8px;border-radius:5px;background:rgba(255,255,255,.04);border:1px solid var(--g3);color:var(--t2)}
+.cmeta{display:flex;gap:12px;font-size:11px;color:var(--t2);margin-top:auto}
+.enr{display:block;width:100%;padding:10px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid var(--g4);color:var(--t);font-family:var(--fh);font-size:11px;font-weight:600;text-align:center;text-decoration:none;cursor:pointer;transition:all .2s}
+.enr:hover{background:linear-gradient(135deg,var(--v),var(--pk));border-color:transparent;color:#fff;box-shadow:0 4px 18px var(--gv)}
+.emp{grid-column:1/-1;text-align:center;padding:70px 20px}
+.emp h3{font-family:var(--fh);font-size:19px;margin-bottom:6px}.emp p{color:var(--t2)}
+
+/* AI ADVISOR */
+.aip{padding:30px 0 60px}
+.aihl{text-align:center;margin-bottom:22px}
+.aihl h2{font-family:var(--fh);font-size:32px;font-weight:700;letter-spacing:-1px;margin-bottom:7px}
+.aihl p{color:var(--t2);font-weight:300;font-size:15px}
+.ailyt{display:grid;grid-template-columns:1fr 310px;gap:16px;align-items:start}
+.cwin{background:var(--g1);backdrop-filter:blur(28px);border:1px solid var(--g3);border-radius:22px;display:flex;flex-direction:column;height:620px;overflow:hidden;position:relative}
+.cwin::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.14),transparent)}
+.ctop{padding:15px 19px;border-bottom:1px solid var(--g3);display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.02)}
+.avw{position:relative}
+.av{width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,var(--v),var(--pk));display:flex;align-items:center;justify-content:center;font-size:17px;box-shadow:0 0 16px var(--gv)}
+.dot{position:absolute;bottom:-2px;right:-2px;width:10px;height:10px;background:var(--em);border-radius:50%;border:2px solid var(--bg);animation:dotp 2.5s infinite}
+@keyframes dotp{0%,100%{box-shadow:0 0 5px rgba(16,185,129,.6)}50%{box-shadow:0 0 12px rgba(16,185,129,.9)}}
+.ci h3{font-family:var(--fh);font-size:13px;font-weight:600}
+.ci p{font-size:10px;color:var(--t3);margin-top:1px}
+.abg{margin-left:auto;padding:3px 9px;background:rgba(139,92,246,.12);border:1px solid rgba(139,92,246,.25);border-radius:14px;font-size:10px;color:var(--v2);font-weight:500}
+.msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+.msgs::-webkit-scrollbar{width:2px}
+.msgs::-webkit-scrollbar-thumb{background:rgba(139,92,246,.3)}
+.msgs{scrollbar-width:thin;scrollbar-color:rgba(139,92,246,.3) transparent;}
+.mrow{display:flex;gap:8px;align-items:flex-start;max-width:88%}
+.mrow.u{margin-left:auto;flex-direction:row-reverse}
+.mav{width:28px;height:28px;flex-shrink:0;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:11px;border:1px solid var(--g3);background:var(--g2)}
+.mrow.u .mav{background:linear-gradient(135deg,var(--v),var(--pk));border:none;font-size:9px;font-weight:700;color:#fff;font-family:var(--fh)}
+.mbub{padding:10px 13px;border-radius:13px;font-size:13px;line-height:1.6}
+.mrow.ai .mbub{background:rgba(255,255,255,.05);border:1px solid var(--g3);color:var(--t);border-top-left-radius:3px}
+.mrow.u .mbub{background:linear-gradient(135deg,var(--v),var(--pk));color:#fff;border-top-right-radius:3px;box-shadow:0 3px 16px var(--gv)}
+.tdot{display:flex;gap:4px;padding:3px 2px}
+.tdot span{width:6px;height:6px;border-radius:50%;background:var(--t3);animation:tb 1.4s infinite}
+.tdot span:nth-child(2){animation-delay:.2s}.tdot span:nth-child(3){animation-delay:.4s}
+@keyframes tb{0%,80%,100%{transform:translateY(0);opacity:.5}40%{transform:translateY(-7px);opacity:1}}
+.mcs{display:flex;flex-direction:column;gap:6px;margin-top:9px}
+.mc{display:flex;align-items:center;gap:10px;background:rgba(0,0,0,.25);border:1px solid var(--g3);border-radius:10px;padding:9px 12px}
+.mc:hover{border-color:rgba(139,92,246,.4)}
+.mci{flex:1;min-width:0}
+.mct{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mcm{font-size:10px;color:var(--t3);margin-top:1px}
+.mcb{font-size:10px;font-weight:600;color:var(--v2);background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.25);padding:4px 9px;border-radius:7px;text-decoration:none;white-space:nowrap;transition:all .15s;flex-shrink:0}
+.mcb:hover{background:linear-gradient(135deg,var(--v),var(--pk));border-color:transparent;color:#fff}
+.cbot{padding:12px 14px;border-top:1px solid var(--g3);display:flex;gap:8px;background:rgba(0,0,0,.2)}
+.cinp{flex:1;background:rgba(255,255,255,.05);border:1px solid var(--g4);border-radius:10px;padding:10px 13px;color:var(--t);font-family:var(--fb);font-size:13px;outline:none;transition:border-color .2s}
+.cinp::placeholder{color:var(--t3)}
+.cinp:focus{border-color:rgba(139,92,246,.5)}
+.csend{padding:10px 16px;border-radius:10px;background:linear-gradient(135deg,var(--v),var(--pk));border:none;color:#fff;font-family:var(--fh);font-size:11px;font-weight:600;cursor:pointer;box-shadow:0 3px 13px var(--gv)}
+.csend:hover{transform:translateY(-1px)}
+.csend:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.side{display:flex;flex-direction:column;gap:13px}
+.sc{background:var(--g1);border:1px solid var(--g3);border-radius:15px;padding:16px;position:relative;overflow:hidden}
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent)}
+.sh{font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--t3);font-weight:600;margin-bottom:11px}
+.pb{display:block;width:100%;text-align:left;background:rgba(255,255,255,.03);border:1px solid var(--g3);border-radius:9px;padding:9px 11px;font-size:11px;color:var(--t2);cursor:pointer;margin-bottom:6px;transition:all .15s;font-family:var(--fb);line-height:1.4}
+.pb:last-child{margin-bottom:0}
+.pb:hover{border-color:rgba(139,92,246,.4);color:var(--t);transform:translateX(2px)}
+.srow{display:flex;gap:9px;align-items:flex-start;margin-bottom:9px}
+.srow:last-child{margin-bottom:0}
+.snum{width:21px;height:21px;flex-shrink:0;border-radius:7px;background:linear-gradient(135deg,var(--v),var(--pk));font-size:10px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--fh)}
+.stx{font-size:11px;color:var(--t2);line-height:1.5}
+
+/* ML INSIGHTS */
+.mlp{padding:30px 0 60px}
+.mlh{text-align:center;margin-bottom:28px}
+.mlh h2{font-family:var(--fh);font-size:36px;font-weight:700;letter-spacing:-1.5px;margin-bottom:8px}
+.mlh p{color:var(--t2);font-size:15px;font-weight:300}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-bottom:22px}
+.kpi{background:var(--g1);border:1px solid var(--g3);border-radius:15px;padding:17px 19px;position:relative;overflow:hidden;transition:transform .18s}
+.kpi:hover{transform:translateY(-3px)}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent)}
+.kico{font-size:19px;margin-bottom:7px}
+.kval{font-family:var(--fh);font-size:26px;font-weight:700;background:linear-gradient(135deg,var(--v2),var(--pk));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.klbl{font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:1px;margin-top:3px}
+.ksub{font-size:10px;color:var(--em);margin-top:4px;font-weight:500}
+
+/* AI Graph Builder */
+.agb{background:var(--g1);border:1px solid rgba(6,182,212,.3);border-radius:18px;padding:20px;margin-bottom:20px;position:relative;overflow:hidden}
+.agb::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(6,182,212,.4),transparent)}
+.agb-title{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.agb-title h3{font-family:var(--fh);font-size:16px;font-weight:600}
+.agb-title span{font-size:11px;color:var(--cy)}
+.agb-row{display:flex;gap:10px;align-items:stretch;flex-wrap:wrap}
+.agb-inp{flex:1;min-width:240px;background:rgba(255,255,255,.05);border:1px solid rgba(6,182,212,.3);border-radius:10px;padding:11px 14px;color:var(--t);font-family:var(--fb);font-size:13px;outline:none;transition:border-color .2s;resize:none;height:44px}
+.agb-inp:focus{border-color:var(--cy)}
+.agb-inp::placeholder{color:var(--t3)}
+.agb-btn{padding:11px 22px;border-radius:10px;background:linear-gradient(135deg,var(--cy),var(--v));border:none;color:#fff;font-family:var(--fh);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .2s}
+.agb-btn:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(6,182,212,.4)}
+.agb-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.agb-presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.agb-p{padding:5px 12px;border-radius:16px;font-size:11px;border:1px solid var(--g3);color:var(--t2);cursor:pointer;background:var(--g1);font-family:var(--fb);transition:all .15s}
+.agb-p:hover{border-color:rgba(6,182,212,.4);color:var(--cy);background:rgba(6,182,212,.06)}
+.agb-result{margin-top:16px;background:rgba(0,0,0,.2);border:1px solid var(--g3);border-radius:12px;padding:16px}
+.agb-chart-title{font-family:var(--fh);font-size:14px;font-weight:600;margin-bottom:3px}
+.agb-chart-sub{font-size:11px;color:var(--t3);margin-bottom:14px}
+.agb-wrap canvas{max-height:320px}
+.agb-err{color:var(--rd);font-size:12px;padding:10px;background:rgba(239,68,68,.08);border-radius:8px;border:1px solid rgba(239,68,68,.25)}
+.agb-loading{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--cy);padding:12px 0}
+.spin{width:18px;height:18px;border:2px solid rgba(6,182,212,.2);border-top-color:var(--cy);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.mllyt{display:grid;grid-template-columns:1fr 320px;gap:17px;align-items:start}
+.mlcharts{display:flex;flex-direction:column;gap:17px}
+.cr2{display:grid;grid-template-columns:1fr 1fr;gap:17px}
+.cb{background:var(--g1);border:1px solid var(--g3);border-radius:16px;padding:19px;position:relative;overflow:hidden;animation:cin .45s ease both}
+.cb::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.1),transparent)}
+.ctitle{font-family:var(--fh);font-size:13px;font-weight:600;margin-bottom:3px}
+.csub{font-size:11px;color:var(--t3);margin-bottom:13px}
+.cwrap canvas{max-height:255px}
+.cwrap.tall canvas{max-height:320px}
+.fbtns{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:11px}
+.fb{padding:4px 10px;border-radius:14px;font-size:10px;font-weight:500;border:1px solid var(--g3);color:var(--t2);cursor:pointer;background:var(--g1);font-family:var(--fb);transition:all .15s}
+.fb:hover{color:var(--t)}
+.fb.on{background:rgba(6,182,212,.15);border-color:rgba(6,182,212,.5);color:var(--cy)}
+.mbdg{display:inline-flex;align-items:center;gap:5px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.25);border-radius:14px;padding:3px 10px;font-size:10px;color:var(--em);font-weight:500;margin-top:7px}
+.poplist{display:flex;flex-direction:column;gap:8px}
+.prow{display:flex;align-items:center;gap:9px}
+.prk{font-family:var(--fh);font-size:11px;font-weight:700;color:var(--t3);min-width:18px}
+.pbw{flex:1;height:6px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden}
+.pbar{height:100%;border-radius:3px;transition:width .7s cubic-bezier(.16,1,.3,1)}
+.pcat{font-size:10px;color:var(--t2);min-width:82px;text-align:right}
+.psc{font-size:10px;font-weight:600;color:var(--v2);min-width:30px;text-align:right}
+.hmwrap{overflow-x:auto}
+.hmt{border-collapse:collapse;font-size:10px;min-width:450px}
+.hmt th{padding:4px 6px;color:var(--t3);font-weight:500;text-align:center;font-size:9px}
+.hmt th.rh{text-align:right;padding-right:7px;white-space:nowrap}
+.hmt td{width:37px;height:37px;text-align:center;border-radius:5px;font-weight:600;font-size:10px;transition:transform .12s}
+.hmt td:hover{transform:scale(1.18);position:relative;z-index:2}
+/* ML CHAT */
+.mlchat{background:var(--g1);border:1px solid var(--g3);border-radius:22px;display:flex;flex-direction:column;height:720px;overflow:hidden;position:sticky;top:72px}
+.mlchat::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent)}
+.mlctop{padding:13px 15px;border-bottom:1px solid var(--g3);display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.02)}
+.mlcmsgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:11px}
+.mlcmsgs::-webkit-scrollbar{width:2px}
+.mlcmsgs::-webkit-scrollbar-thumb{background:rgba(6,182,212,.3)}
+.mlcmsgs{scrollbar-width:thin;scrollbar-color:rgba(6,182,212,.3) transparent;}
+.mlqk{padding:11px 13px;border-bottom:1px solid var(--g3);display:flex;flex-direction:column;gap:5px}
+.mqb{background:rgba(255,255,255,.03);border:1px solid var(--g3);border-radius:7px;padding:6px 9px;font-size:11px;color:var(--t2);cursor:pointer;font-family:var(--fb);text-align:left;transition:all .15s;line-height:1.4}
+.mqb:hover{border-color:rgba(6,182,212,.4);color:var(--t);background:rgba(6,182,212,.06)}
+.mlcbot{padding:11px 13px;border-top:1px solid var(--g3);display:flex;gap:7px;background:rgba(0,0,0,.2)}
+.mlci{flex:1;background:rgba(255,255,255,.05);border:1px solid var(--g4);border-radius:9px;padding:9px 12px;color:var(--t);font-family:var(--fb);font-size:12px;outline:none;transition:border-color .2s}
+.mlci:focus{border-color:rgba(6,182,212,.5)}
+.mlci::placeholder{color:var(--t3)}
+.mlcs{padding:9px 13px;border-radius:9px;background:linear-gradient(135deg,var(--cy),var(--v));border:none;color:#fff;font-family:var(--fh);font-size:11px;font-weight:600;cursor:pointer;transition:all .2s}
+.mlcs:hover{transform:translateY(-1px)}
+.mlcs:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.load-state{text-align:center;padding:60px 20px;color:var(--t2)}
+.load-spin{width:34px;height:34px;border:3px solid rgba(139,92,246,.2);border-top-color:var(--v);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
+@media(max-width:1000px){.mllyt,.ailyt{grid-template-columns:1fr}.mlchat{height:460px;position:static}.side{display:none}.cr2{grid-template-columns:1fr}}
+@media(max-width:640px){.kpis{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr}.ss{display:none}.tab{padding:6px 9px;font-size:10px}}
+</style>
+</head>
+<body>
+<div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div>
+
+<header>
+  <div class="hw">
+    <div class="logo"><div class="li">🧭</div>Course<span class="lt">Compass</span></div>
+    <div class="tabs">
+      <button class="tab on" onclick="sv('b')">Browse Courses</button>
+      <button class="tab" onclick="sv('a')">✦ AI Advisor</button>
+      <button class="tab" onclick="sv('m')">📊 ML Insights</button>
+    </div>
+  </div>
+</header>
+
+<!-- BROWSE -->
+<div id="vb" class="on">
+  <section class="hero">
+    <div class="wrap">
+      <div class="bdg">64 handpicked courses across 8 platforms</div>
+      <h1>Learn anything.<br><span class="grad">Find your path.</span></h1>
+      <p>Filter by level, duration, price and skills. Every card links to the real course.</p>
+      <div class="sw"><div class="sg"></div><div class="si">
+        <svg width="16" height="16" fill="none" stroke="var(--t3)" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="srch" placeholder="Search courses, skills, platforms…" oninput="dbnc()"/>
+        <button class="sbtn" onclick="rf()">Search</button>
+      </div></div>
+      <div class="ss">
+        <div class="si2"><div class="sn" id="sfree">—</div><div class="sl">Free Courses</div></div>
+        <div class="si2"><div class="sn">8</div><div class="sl">Platforms</div></div>
+        <div class="si2"><div class="sn">8</div><div class="sl">Categories</div></div>
+        <div class="si2"><div class="sn">64</div><div class="sl">Total</div></div>
+      </div>
+    </div>
+  </section>
+  <div class="wrap">
+    <div class="fs">
+      <div class="fr"><span class="fl">Category</span><div id="cp" style="display:flex;flex-wrap:wrap;gap:6px"></div></div>
+      <div class="fr">
+        <span class="fl">Level</span><div id="lp" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+        <span class="fl" style="margin-left:10px">Price</span><div id="pp" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+      </div>
+      <div class="avr">
+        <span style="font-size:10px;text-transform:uppercase;letter-spacing:1.4px;color:var(--t3);font-weight:600">Sort</span>
+        <select id="srt" onchange="rf()">
+          <option value="rating">Highest Rated</option><option value="ha">Shortest First</option>
+          <option value="hd">Longest First</option><option value="pa">Free First</option><option value="title">A → Z</option>
+        </select>
+        <div class="rg"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Max hours<input type="range" id="hr" min="5" max="120" value="120" step="5" oninput="ul();dbnc()"/><span class="rv" id="hv">Any</span></div>
+        <div class="rg"><svg width="12" height="12" fill="var(--am)" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>Min rating<input type="range" id="rr" min="4" max="5" value="4" step="0.1" oninput="ul();dbnc()"/><span class="rv" id="rv">4.0+</span></div>
+        <div class="rc" id="rc">Loading…</div>
+      </div>
+    </div>
+    <div class="grid" id="grid"></div>
+  </div>
+</div>
+
+<!-- AI ADVISOR -->
+<div id="va">
+  <div class="wrap aip">
+    <div class="aihl">
+      <div class="bdg" style="margin-bottom:12px">Powered by Gemini 2.0 Flash · Via Flask</div>
+      <h2>Your <span class="grad">AI Course Advisor</span></h2>
+      <p>Describe your background and goals — I'll find the perfect courses for you.</p>
+    </div>
+    <div class="ailyt">
+      <div class="cwin">
+        <div class="ctop">
+          <div class="avw"><div class="av">🎯</div><div class="dot"></div></div>
+          <div class="ci"><h3>Course Advisor</h3><p>Gemini 2.0 Flash · Via Flask backend</p></div>
+          <div class="abg">Gemini ✦</div>
+        </div>
+        <div class="msgs" id="msgs"></div>
+        <div class="cbot">
+          <input class="cinp" type="text" id="cinp" placeholder="e.g. I want to learn ML, I know Python basics, 2hrs/day…" onkeydown="if(event.key==='Enter')sc()"/>
+          <button class="csend" id="csend" onclick="sc()">Send ↗</button>
+        </div>
+      </div>
+      <div class="side">
+        <div class="sc">
+          <div class="sh">Try these prompts</div>
+          <button class="pb" onclick="up(this)">Best free Python course to get a job in 6 months?</button>
+          <button class="pb" onclick="up(this)">Advanced ML courses, 2 hours daily on weekdays</button>
+          <button class="pb" onclick="up(this)">Switch to web dev — only free courses under 40h</button>
+          <button class="pb" onclick="up(this)">Data science for someone who knows Excel basics</button>
+          <button class="pb" onclick="up(this)">Full cybersecurity path from zero to job-ready</button>
+        </div>
+        <div class="sc">
+          <div class="sh">How it works</div>
+          <div class="srow"><div class="snum">1</div><div class="stx">Tell me your skills and background</div></div>
+          <div class="srow"><div class="snum">2</div><div class="stx">Mention time, budget and goal</div></div>
+          <div class="srow"><div class="snum">3</div><div class="stx">Gemini picks best courses and explains why</div></div>
+        </div>
+        <div class="sc">
+          <div class="sh">Status</div>
+          <div style="font-size:12px;color:var(--em)">● Gemini 2.0 Flash Ready</div>
+          <div style="font-size:10px;color:var(--t3);margin-top:4px" id="mode-lbl">Detecting mode…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ML INSIGHTS -->
+<div id="vm">
+  <div class="wrap mlp">
+    <div class="mlh">
+      <div class="bdg" style="margin-bottom:11px">Polynomial Regression · Gemini 2.0 Flash · Flask Backend</div>
+      <h2>📊 <span class="grad">ML Insights</span></h2>
+      <p>Course popularity trends, forecasts & analytics. Ask the AI or generate any graph you want.</p>
+    </div>
+
+    <div class="kpis" id="kpis">
+      <div class="kpi" style="grid-column:1/-1;text-align:center;padding:30px">
+        <div class="load-spin" style="margin:0 auto 10px"></div>
+        <div style="font-size:12px;color:var(--t2)">Loading ML data from Flask…</div>
+        <div style="font-size:11px;color:var(--t3);margin-top:6px">Make sure Flask is running: <code style="color:var(--v2)">python app.py</code></div>
+      </div>
+    </div>
+
+    <!-- AI GRAPH BUILDER -->
+    <div class="agb" id="agb" style="display:none">
+      <div class="agb-title">
+        <span style="font-size:20px">✨</span>
+        <h3>AI Graph Builder</h3>
+        <span>— Describe any chart you want, Gemini will generate it</span>
+      </div>
+      <div class="agb-row">
+        <input class="agb-inp" type="text" id="agb-inp" placeholder="e.g. Show me a radar chart comparing all category ratings…" onkeydown="if(event.key==='Enter')genGraph()"/>
+        <button class="agb-btn" id="agb-btn" onclick="genGraph()">✨ Generate Graph</button>
+      </div>
+      <div class="agb-presets">
+        <button class="agb-p" onclick="setAgb(this)">Radar chart of category ratings</button>
+        <button class="agb-p" onclick="setAgb(this)">Bar chart of forecast growth % per category</button>
+        <button class="agb-p" onclick="setAgb(this)">Line chart comparing AI/ML vs Cloud enrollment trends</button>
+        <button class="agb-p" onclick="setAgb(this)">Doughnut chart of free vs paid courses per category</button>
+        <button class="agb-p" onclick="setAgb(this)">Scatter plot of popularity score vs avg hours</button>
+        <button class="agb-p" onclick="setAgb(this)">Bar chart of top 5 highest rated categories</button>
+        <button class="agb-p" onclick="setAgb(this)">Line chart of Cybersecurity enrollment 2022-2024</button>
+      </div>
+      <div id="agb-result" style="display:none"></div>
+    </div>
+
+    <div id="ml-main" style="display:none">
+      <div class="mllyt">
+        <div class="mlcharts">
+          <div class="cb">
+            <div class="ctitle">📈 Enrollment Trend & ML Forecast</div>
+            <div class="csub">36-month history (2022–2024) + 6-month forecast via Polynomial Regression. Click category to switch.</div>
+            <div class="fbtns" id="fbtns"></div>
+            <div class="cwrap tall"><canvas id="ct"></canvas></div>
+            <div class="mbdg" id="r2bdg">● Computing model…</div>
+          </div>
+          <div class="cr2">
+            <div class="cb"><div class="ctitle">⭐ Avg Rating by Category</div><div class="csub">Mean rating across all 64 courses</div><div class="cwrap"><canvas id="cb2"></canvas></div></div>
+            <div class="cb"><div class="ctitle">🥧 Category Distribution</div><div class="csub">Courses per category</div><div class="cwrap"><canvas id="cp2"></canvas></div></div>
+          </div>
+          <div class="cr2">
+            <div class="cb"><div class="ctitle">🔵 Hours vs Rating</div><div class="csub">Each dot = one course, colored by level</div><div class="cwrap"><canvas id="csc"></canvas></div></div>
+            <div class="cb"><div class="ctitle">🔥 Popularity Score</div><div class="csub">Composite ML score: rating × count / avg_hours</div><div class="poplist" id="popl"></div></div>
+          </div>
+          <div class="cb"><div class="ctitle">🗺 Skill Co-occurrence Heatmap</div><div class="csub">Top 10 skills — darker = appear together more often across courses</div><div class="hmwrap" id="hmw"></div></div>
+        </div>
+        <!-- ML CHAT SIDEBAR -->
+        <div class="mlchat">
+          <div class="mlctop">
+            <div class="avw"><div class="av" style="background:linear-gradient(135deg,var(--cy),var(--v))">📊</div><div class="dot" style="background:var(--cy)"></div></div>
+            <div class="ci"><h3>ML Analyst</h3><p>Ask about trends & data</p></div>
+            <div class="abg" style="background:rgba(6,182,212,.12);border-color:rgba(6,182,212,.3);color:var(--cy)">Gemini ✦</div>
+          </div>
+          <div class="mlqk">
+            <div style="font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--t3);font-weight:600;margin-bottom:3px">Quick questions</div>
+            <button class="mqb" onclick="mla(this)">Which category is growing fastest?</button>
+            <button class="mqb" onclick="mla(this)">What does the AI / ML forecast show?</button>
+            <button class="mqb" onclick="mla(this)">Which category has the best avg rating?</button>
+            <button class="mqb" onclick="mla(this)">Compare Cloud vs Cybersecurity growth</button>
+          </div>
+          <div class="mlcmsgs" id="mlmsgs"></div>
+          <div class="mlcbot">
+            <input class="mlci" type="text" id="mlci" placeholder="Ask about the data…" onkeydown="if(event.key==='Enter')sml()"/>
+            <button class="mlcs" id="mlcs" onclick="sml()">Ask ↗</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Mode detection: preview vs local Flask ────────────────────
+// In browser preview localhost:5000 is unreachable, so we run
+// ML in JS and call Gemini directly (with your keys).
+const FLASK_URL = "http://localhost:5000";
+const GEMINI_KEYS = [
+  "AIzaSyDjEcY2ODs3u6SFddv_UGvNinNECpgY5Vg",
+  "AIzaSyA1Uxth5nhqoQkfvbEVPoIbecxBysFebhU",
+  "AIzaSyBnimWXCuf3jBdMV3sidmRJzYfQfj0xLJw"
+];
+let _gkIdx = 0;
+let _useFlask = null; // null = not yet detected
+
+async function detectMode(){
+  if(_useFlask !== null) return _useFlask;
+  try {
+    const r = await fetch(FLASK_URL+"/api/status", {signal: AbortSignal.timeout(2000)});
+    _useFlask = r.ok;
+  } catch(e) { _useFlask = false; }
+  console.log("Mode:", _useFlask ? "Flask backend" : "Standalone (Gemini direct)");
+  return _useFlask;
+}
+
+// Direct Gemini call (used when Flask is not available)
+async function callGeminiDirect(prompt){
+  const key = GEMINI_KEYS[_gkIdx % GEMINI_KEYS.length];
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
+  for(let attempt=0; attempt<GEMINI_KEYS.length*2; attempt++){
+    const k = GEMINI_KEYS[(_gkIdx+attempt) % GEMINI_KEYS.length];
+    const u = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${k}`;
+    try {
+      const r = await fetch(u, {method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({contents:[{role:"user",parts:[{text:prompt}]}],
+          generationConfig:{maxOutputTokens:800,temperature:0.7}})});
+      if(r.status===429){
+        console.log("429 on key",attempt%GEMINI_KEYS.length+1,"rotating...");
+        continue;
+      }
+      if(!r.ok) throw new Error("Gemini HTTP "+r.status);
+      const d = await r.json();
+      return d.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    } catch(ex){
+      if(attempt >= GEMINI_KEYS.length*2-1) throw ex;
+    }
+  }
+  throw new Error("All Gemini keys rate-limited (429). Wait or add more keys.");
+}
+
+// ── Pure-JS Polynomial Regression (used in standalone mode) ──
+const EH={
+  "Programming":  [1200,1250,1300,1280,1350,1400,1380,1420,1500,1480,1550,1600,1620,1680,1700,1660,1750,1820,1800,1870,1950,1920,2000,2080,2100,2180,2200,2160,2280,2350,2320,2400,2500,2450,2550,2620],
+  "AI / ML":      [800,850,900,950,1050,1100,1200,1300,1450,1500,1650,1800,1900,2100,2300,2500,2800,3100,3400,3700,4000,4300,4700,5100,5500,6000,6500,7000,7600,8200,8900,9600,10400,11200,12100,13000],
+  "Web Dev":      [1500,1520,1540,1560,1580,1600,1620,1640,1660,1680,1700,1720,1740,1760,1780,1800,1820,1840,1860,1880,1900,1920,1940,1960,1980,2000,2020,2040,2060,2080,2100,2120,2140,2160,2180,2200],
+  "Data Science": [900,950,980,1020,1060,1100,1140,1180,1220,1260,1300,1350,1400,1450,1500,1550,1600,1650,1700,1750,1800,1860,1920,1980,2040,2100,2170,2240,2310,2380,2460,2540,2620,2700,2790,2880],
+  "Cybersecurity":[400,420,440,470,500,530,560,600,640,680,720,770,820,880,940,1000,1070,1140,1220,1300,1390,1480,1580,1690,1800,1920,2050,2190,2340,2500,2670,2850,3050,3260,3480,3720],
+  "Cloud":        [600,640,680,720,770,820,870,930,990,1060,1130,1210,1290,1380,1470,1570,1680,1790,1910,2040,2180,2330,2490,2660,2840,3030,3240,3460,3700,3950,4220,4510,4820,5150,5500,5880],
+  "Design":       [500,510,520,530,540,550,565,580,595,610,625,640,655,670,685,700,715,730,745,760,775,795,815,835,855,875,900,925,950,975,1005,1035,1065,1095,1130,1165],
+  "Business":     [700,720,740,760,785,810,835,860,890,920,950,985,1020,1055,1090,1130,1170,1210,1255,1300,1345,1395,1445,1500,1555,1610,1670,1730,1795,1860,1930,2000,2075,2150,2230,2315]
+};
+const MONTHS=["Jan 22","Feb 22","Mar 22","Apr 22","May 22","Jun 22","Jul 22","Aug 22","Sep 22","Oct 22","Nov 22","Dec 22","Jan 23","Feb 23","Mar 23","Apr 23","May 23","Jun 23","Jul 23","Aug 23","Sep 23","Oct 23","Nov 23","Dec 23","Jan 24","Feb 24","Mar 24","Apr 24","May 24","Jun 24","Jul 24","Aug 24","Sep 24","Oct 24","Nov 24","Dec 24"];
+const FM=["Jan 25","Feb 25","Mar 25","Apr 25","May 25","Jun 25"];
+
+function jsPoly(y,deg=2){
+  const n=y.length,d=deg+1;
+  const X=Array.from({length:n},(_,i)=>Array.from({length:d},(_,j)=>Math.pow(i,j)));
+  const Xt=X[0].map((_,c)=>X.map(r=>r[c]));
+  const XtX=Xt.map(r=>Xt[0].map((_,j)=>r.reduce((s,_,k)=>s+r[k]*Xt[j][k],0)));
+  // proper matmul
+  const A=Xt.map(row=>Array.from({length:d},(_,j)=>row.reduce((s,v,k)=>s+v*X[k][j],0)));
+  const b=Xt.map(row=>row.reduce((s,v,i2)=>s+v*y[i2],0));
+  // gaussian elimination
+  const M=A.map((row,i)=>[...row,b[i]]);
+  for(let p=0;p<d;p++){
+    let mx=p;
+    for(let i=p+1;i<d;i++) if(Math.abs(M[i][p])>Math.abs(M[mx][p])) mx=i;
+    [M[p],M[mx]]=[M[mx],M[p]];
+    for(let i=p+1;i<d;i++){const f=M[i][p]/M[p][p];for(let j=p;j<=d;j++)M[i][j]-=f*M[p][j];}
+  }
+  const coef=new Array(d).fill(0);
+  for(let i=d-1;i>=0;i--){coef[i]=(M[i][d]-M[i].slice(0,d).reduce((s,v,j)=>j===i?s:s+v*coef[j],0))/M[i][i];}
+  return coef;
+}
+function jsPredict(coef,x){return coef.reduce((s,c,i)=>s+c*Math.pow(x,i),0);}
+function jsForecast(cat,n=6){
+  const y=EH[cat];
+  const coef=jsPoly(y,2);
+  const mean=y.reduce((a,b)=>a+b,0)/y.length;
+  const ss_res=y.reduce((s,yi,i)=>s+Math.pow(yi-jsPredict(coef,i),2),0);
+  const ss_tot=y.reduce((s,yi)=>s+Math.pow(yi-mean,2),0);
+  const r2=+(1-ss_res/ss_tot).toFixed(4);
+  const pred=Array.from({length:n},(_,i)=>Math.max(0,Math.round(jsPredict(coef,y.length+i))));
+  return {pred,r2};
+}
+function buildMLDataJS(){
+  const catCnt={},catSum={},catN={};
+  COURSES.forEach(c=>{catCnt[c.category]=(catCnt[c.category]||0)+1;catSum[c.category]=(catSum[c.category]||0)+c.rating;catN[c.category]=(catN[c.category]||0)+1;});
+  const avgR={};Object.keys(catSum).forEach(k=>avgR[k]=+(catSum[k]/catN[k]).toFixed(2));
+  const sf={};COURSES.forEach(c=>c.skills.forEach(s=>sf[s]=(sf[s]||0)+1));
+  const topSk=Object.entries(sf).sort((a,b)=>b[1]-a[1]).slice(0,10).map(x=>x[0]);
+  const heatmap=topSk.map(s1=>topSk.map(s2=>COURSES.filter(c=>c.skills.includes(s1)&&c.skills.includes(s2)).length));
+  const forecasts={},modelStats={};
+  Object.keys(EH).forEach(cat=>{const {pred,r2}=jsForecast(cat);forecasts[cat]=pred;modelStats[cat]={r2};});
+  const pop=Object.keys(catCnt).map(cat=>{
+    const cnt=catCnt[cat],avgH=COURSES.filter(c=>c.category===cat).reduce((s,c)=>s+c.hours,0)/cnt;
+    return{category:cat,score:+(avgR[cat]*cnt/(1+avgH/50)).toFixed(2),count:cnt,avg_rating:avgR[cat],avg_hours:+avgH.toFixed(1)};
+  }).sort((a,b)=>b.score-a.score);
+  return{
+    category_distribution:Object.entries(catCnt).map(([k,v])=>({category:k,count:v})),
+    avg_ratings:Object.entries(avgR).map(([k,v])=>({category:k,rating:v})),
+    scatter:COURSES.map(c=>({id:c.id,title:c.title,hours:c.hours,rating:c.rating,level:c.level,category:c.category})),
+    heatmap:{skills:topSk,matrix:heatmap},
+    trend:{history:EH,months:MONTHS,forecast:forecasts,forecast_months:FM,model_stats:modelStats},
+    popularity:pop,
+    total_courses:COURSES.length,
+    free_courses:COURSES.filter(c=>c.price===0).length
+  };
+}
+function buildMLContext(d){
+  const lines=Object.keys(EH).map(cat=>{
+    const pred=d.trend.forecast[cat],r2=d.trend.model_stats[cat].r2;
+    const last=EH[cat][EH[cat].length-1];
+    const growth=+(((pred[pred.length-1]-last)/last)*100).toFixed(1);
+    return `${cat}: ~${last.toLocaleString()}/mo → ${pred[pred.length-1].toLocaleString()}/mo (+${growth}%), R²=${r2}`;
+  });
+  const avgR={};d.avg_ratings.forEach(x=>avgR[x.category]=x.rating);
+  return `CourseCompass ML (64 courses, 8 categories)\n\nFORECASTS (Polynomial Regression):\n${lines.join("\n")}\n\nRATINGS: ${Object.entries(avgR).map(([k,v])=>k+": "+v).join(", ")}\nFREE: ${d.free_courses}/${d.total_courses}`;
+}
+const CC = {Programming:"#8b5cf6","AI / ML":"#ec4899","Web Dev":"#06b6d4","Data Science":"#10b981",Cloud:"#f59e0b",Cybersecurity:"#ef4444",Design:"#a78bfa",Business:"#34d399"};
+
+// ── Course data (for browse) ──────────────────────────────────────
+const COURSES=[
+  {id:1,title:"Python for Everybody Specialization",platform:"Coursera",category:"Programming",level:"Beginner",rating:4.8,price:0,hours:30,url:"https://www.coursera.org/specializations/python",skills:["Python","Variables","Loops","Functions","APIs","Files"]},
+  {id:2,title:"CS50: Introduction to Computer Science",platform:"edX",category:"Programming",level:"Beginner",rating:4.9,price:0,hours:60,url:"https://cs50.harvard.edu/x/",skills:["C","Python","SQL","Algorithms","Problem Solving","Web"]},
+  {id:3,title:"JavaScript Algorithms & Data Structures",platform:"freeCodeCamp",category:"Programming",level:"Intermediate",rating:4.7,price:0,hours:40,url:"https://www.freecodecamp.org/learn/javascript-algorithms-and-data-structures/",skills:["JavaScript","Algorithms","Data Structures","ES6","OOP","Regex"]},
+  {id:4,title:"100 Days of Code – Python Bootcamp",platform:"Udemy",category:"Programming",level:"Beginner",rating:4.7,price:15,hours:55,url:"https://www.udemy.com/course/100-days-of-code/",skills:["Python","Automation","Web Scraping","APIs","Games","GUI"]},
+  {id:5,title:"C++ Programming: Beginner to Beyond",platform:"Udemy",category:"Programming",level:"Advanced",rating:4.6,price:13,hours:46,url:"https://www.udemy.com/course/beginning-c-plus-plus-programming/",skills:["C++","OOP","Memory Management","STL","Concurrency","Templates"]},
+  {id:6,title:"Java Programming & Software Engineering",platform:"Coursera",category:"Programming",level:"Beginner",rating:4.7,price:0,hours:45,url:"https://www.coursera.org/specializations/java-programming",skills:["Java","OOP","Data Structures","Algorithms","Software Design"]},
+  {id:7,title:"Rust Programming – Official Book",platform:"rust-lang.org",category:"Programming",level:"Intermediate",rating:4.8,price:0,hours:25,url:"https://doc.rust-lang.org/book/",skills:["Rust","Memory Safety","Concurrency","Systems Programming","WebAssembly"]},
+  {id:8,title:"Go Programming Language Tour",platform:"go.dev",category:"Programming",level:"Beginner",rating:4.7,price:0,hours:10,url:"https://go.dev/tour/welcome/1",skills:["Go","Goroutines","Channels","Interfaces","Packages"]},
+  {id:9,title:"MIT: Introduction to Algorithms",platform:"MIT OpenCourseWare",category:"Programming",level:"Advanced",rating:4.9,price:0,hours:80,url:"https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-fall-2011/",skills:["Algorithms","Dynamic Programming","Graph Theory","Sorting","Complexity"]},
+  {id:10,title:"Kotlin for Java Developers",platform:"Coursera",category:"Programming",level:"Intermediate",rating:4.6,price:0,hours:20,url:"https://www.coursera.org/learn/kotlin-for-java-developers",skills:["Kotlin","Coroutines","Null Safety","Functional Programming","Android"]},
+  {id:11,title:"The Complete Web Development Bootcamp",platform:"Udemy",category:"Web Dev",level:"Beginner",rating:4.7,price:15,hours:65,url:"https://www.udemy.com/course/the-complete-web-development-bootcamp/",skills:["HTML","CSS","JavaScript","React","Node.js","MongoDB","Express"]},
+  {id:12,title:"Full Stack Open 2024",platform:"University of Helsinki",category:"Web Dev",level:"Intermediate",rating:4.8,price:0,hours:70,url:"https://fullstackopen.com/en/",skills:["React","Node.js","REST","GraphQL","TypeScript","Testing","Redux"]},
+  {id:13,title:"The Odin Project – Full Stack JavaScript",platform:"The Odin Project",category:"Web Dev",level:"Beginner",rating:4.9,price:0,hours:80,url:"https://www.theodinproject.com/paths/full-stack-javascript",skills:["HTML","CSS","JavaScript","React","Node","Databases","Git"]},
+  {id:14,title:"Next.js 14 & React – Complete Guide",platform:"Udemy",category:"Web Dev",level:"Intermediate",rating:4.7,price:13,hours:25,url:"https://www.udemy.com/course/nextjs-react-the-complete-guide/",skills:["Next.js","React","SSR","API Routes","Deployment","Auth"]},
+  {id:15,title:"CSS – Flexbox, Grid & Sass Complete Guide",platform:"Udemy",category:"Web Dev",level:"Beginner",rating:4.6,price:13,hours:23,url:"https://www.udemy.com/course/css-the-complete-guide-incl-flexbox-grid-sass/",skills:["CSS","Flexbox","Grid","Sass","Animations","Responsive Design"]},
+  {id:16,title:"Django Full Course – Python Web Dev",platform:"freeCodeCamp",category:"Web Dev",level:"Intermediate",rating:4.6,price:0,hours:18,url:"https://www.youtube.com/watch?v=o0XbHvKxw7Y",skills:["Python","Django","ORM","Authentication","REST APIs","Deployment"]},
+  {id:17,title:"HTML & CSS Full Course – Beginner to Pro",platform:"freeCodeCamp",category:"Web Dev",level:"Beginner",rating:4.7,price:0,hours:12,url:"https://www.youtube.com/watch?v=mU6anWqZJcc",skills:["HTML","CSS","Flexbox","Grid","Forms","Accessibility"]},
+  {id:18,title:"Vue.js 3 – The Complete Guide",platform:"Udemy",category:"Web Dev",level:"Intermediate",rating:4.7,price:13,hours:32,url:"https://www.udemy.com/course/vuejs-2-the-complete-guide/",skills:["Vue.js","Vuex","Vue Router","Composition API","TypeScript","Testing"]},
+  {id:19,title:"Responsive Web Design Certification",platform:"freeCodeCamp",category:"Web Dev",level:"Beginner",rating:4.8,price:0,hours:20,url:"https://www.freecodecamp.org/learn/2022/responsive-web-design/",skills:["HTML","CSS","Flexbox","Grid","Accessibility","Projects"]},
+  {id:20,title:"TypeScript: The Complete Developer's Guide",platform:"Udemy",category:"Web Dev",level:"Intermediate",rating:4.6,price:13,hours:27,url:"https://www.udemy.com/course/typescript-the-complete-developers-guide/",skills:["TypeScript","Generics","Decorators","Design Patterns","React","Node"]},
+  {id:21,title:"Machine Learning Specialization (Andrew Ng)",platform:"Coursera",category:"AI / ML",level:"Intermediate",rating:4.9,price:0,hours:90,url:"https://www.coursera.org/specializations/machine-learning-introduction",skills:["Supervised Learning","Neural Nets","Decision Trees","Python","TensorFlow"]},
+  {id:22,title:"Deep Learning Specialization",platform:"Coursera",category:"AI / ML",level:"Advanced",rating:4.9,price:0,hours:120,url:"https://www.coursera.org/specializations/deep-learning",skills:["CNNs","RNNs","Transformers","TensorFlow","Keras","NLP"]},
+  {id:23,title:"Practical Deep Learning for Coders",platform:"fast.ai",category:"AI / ML",level:"Intermediate",rating:4.8,price:0,hours:35,url:"https://course.fast.ai/",skills:["PyTorch","CNNs","NLP","Tabular Data","Diffusion Models","Deployment"]},
+  {id:24,title:"AI For Everyone",platform:"Coursera",category:"AI / ML",level:"Beginner",rating:4.8,price:0,hours:10,url:"https://www.coursera.org/learn/ai-for-everyone",skills:["AI Strategy","Use Cases","Ethics","ML Basics","AI Projects"]},
+  {id:25,title:"Hugging Face NLP Course",platform:"Hugging Face",category:"AI / ML",level:"Intermediate",rating:4.8,price:0,hours:20,url:"https://huggingface.co/learn/nlp-course/chapter1/1",skills:["Transformers","BERT","GPT","Fine-tuning","Tokenizers","Datasets"]},
+  {id:26,title:"LangChain & LLM Apps – Short Course",platform:"DeepLearning.AI",category:"AI / ML",level:"Advanced",rating:4.7,price:0,hours:10,url:"https://www.deeplearning.ai/short-courses/langchain-for-llm-application-development/",skills:["LangChain","LLMs","Chains","Agents","Vector DBs","RAG"]},
+  {id:27,title:"Google Machine Learning Crash Course",platform:"Google",category:"AI / ML",level:"Beginner",rating:4.7,price:0,hours:15,url:"https://developers.google.com/machine-learning/crash-course",skills:["ML Fundamentals","Linear Regression","Neural Nets","TensorFlow","Fairness"]},
+  {id:28,title:"Reinforcement Learning Specialization",platform:"Coursera",category:"AI / ML",level:"Advanced",rating:4.7,price:0,hours:60,url:"https://www.coursera.org/specializations/reinforcement-learning",skills:["Q-Learning","Policy Gradient","Actor-Critic","OpenAI Gym","Dynamic Programming"]},
+  {id:29,title:"MLOps Specialization",platform:"Coursera",category:"AI / ML",level:"Advanced",rating:4.7,price:0,hours:50,url:"https://www.coursera.org/specializations/machine-learning-engineering-for-production-mlops",skills:["MLOps","CI/CD","Model Monitoring","Feature Engineering","TFX","Kubeflow"]},
+  {id:30,title:"Elements of AI",platform:"MinnaLearn",category:"AI / ML",level:"Beginner",rating:4.6,price:0,hours:12,url:"https://www.elementsofai.com/",skills:["AI Basics","Search","Probability","ML Concepts","Ethics","Neural Nets"]},
+  {id:31,title:"IBM Data Science Professional Certificate",platform:"Coursera",category:"Data Science",level:"Beginner",rating:4.6,price:0,hours:80,url:"https://www.coursera.org/professional-certificates/ibm-data-science",skills:["Python","SQL","Data Viz","Machine Learning","Jupyter","Pandas"]},
+  {id:32,title:"Data Analyst with Python Track",platform:"DataCamp",category:"Data Science",level:"Beginner",rating:4.7,price:29,hours:36,url:"https://www.datacamp.com/tracks/data-analyst-with-python",skills:["Pandas","NumPy","Matplotlib","SQL","Statistics","Seaborn"]},
+  {id:33,title:"Statistics with Python Specialization",platform:"Coursera",category:"Data Science",level:"Intermediate",rating:4.6,price:0,hours:45,url:"https://www.coursera.org/specializations/statistics-with-python",skills:["Statistics","Probability","Regression","Bayesian","Inference","Python"]},
+  {id:34,title:"Tableau for Beginners – Hands On",platform:"Udemy",category:"Data Science",level:"Beginner",rating:4.6,price:13,hours:11,url:"https://www.udemy.com/course/tableau10/",skills:["Tableau","Data Viz","Dashboards","Calculated Fields","LOD Expressions"]},
+  {id:35,title:"Kaggle Learn – Python, ML, SQL & more",platform:"Kaggle",category:"Data Science",level:"Beginner",rating:4.7,price:0,hours:15,url:"https://www.kaggle.com/learn",skills:["Python","Pandas","ML","SQL","Data Viz","Feature Engineering"]},
+  {id:36,title:"Data Science: R Basics – HarvardX",platform:"edX",category:"Data Science",level:"Beginner",rating:4.7,price:0,hours:16,url:"https://www.edx.org/course/data-science-r-basics",skills:["R","Data Wrangling","Visualization","ggplot2","dplyr","tidyverse"]},
+  {id:37,title:"Applied Data Science with Python",platform:"Coursera",category:"Data Science",level:"Intermediate",rating:4.6,price:0,hours:40,url:"https://www.coursera.org/specializations/data-science-python",skills:["Python","Pandas","Matplotlib","Scikit-learn","NLTK","NetworkX"]},
+  {id:38,title:"Power BI Full Course",platform:"freeCodeCamp",category:"Data Science",level:"Beginner",rating:4.6,price:0,hours:9,url:"https://www.youtube.com/watch?v=NNSHu0rkew8",skills:["Power BI","DAX","Data Modeling","Dashboards","Power Query","Reports"]},
+  {id:39,title:"AWS Cloud Practitioner Essentials",platform:"AWS Training",category:"Cloud",level:"Beginner",rating:4.7,price:0,hours:15,url:"https://aws.amazon.com/training/digital/aws-cloud-practitioner-essentials/",skills:["AWS","Cloud Concepts","S3","EC2","IAM","Pricing","Security"]},
+  {id:40,title:"Google Cloud Associate Cloud Engineer",platform:"Coursera",category:"Cloud",level:"Intermediate",rating:4.7,price:0,hours:60,url:"https://www.coursera.org/professional-certificates/cloud-engineering-gcp",skills:["GCP","Kubernetes","Terraform","VPC","IAM","BigQuery"]},
+  {id:41,title:"Azure Fundamentals AZ-900",platform:"Microsoft Learn",category:"Cloud",level:"Beginner",rating:4.8,price:0,hours:12,url:"https://learn.microsoft.com/en-us/training/paths/azure-fundamentals/",skills:["Azure","Cloud Concepts","Compute","Networking","Storage","Security"]},
+  {id:42,title:"Docker & Kubernetes: Practical Guide",platform:"Udemy",category:"Cloud",level:"Intermediate",rating:4.7,price:15,hours:24,url:"https://www.udemy.com/course/docker-kubernetes-the-practical-guide/",skills:["Docker","Kubernetes","Containers","Microservices","CI/CD","Helm"]},
+  {id:43,title:"Terraform on AWS – Full Course",platform:"freeCodeCamp",category:"Cloud",level:"Intermediate",rating:4.7,price:0,hours:13,url:"https://www.youtube.com/watch?v=iRaai1IBlB0",skills:["Terraform","AWS","IaC","Modules","State Management","VPC"]},
+  {id:44,title:"Linux Command Line Basics",platform:"Udacity",category:"Cloud",level:"Beginner",rating:4.6,price:0,hours:12,url:"https://www.udacity.com/course/linux-command-line-basics--ud595",skills:["Linux","Bash","Shell Scripting","File System","Permissions","SSH"]},
+  {id:45,title:"Site Reliability Engineering (SRE) Book",platform:"Google",category:"Cloud",level:"Advanced",rating:4.7,price:0,hours:10,url:"https://sre.google/sre-book/table-of-contents/",skills:["SRE","Reliability","Monitoring","Alerting","On-Call","Error Budgets"]},
+  {id:46,title:"Google UX Design Certificate",platform:"Coursera",category:"Design",level:"Beginner",rating:4.8,price:0,hours:80,url:"https://www.coursera.org/professional-certificates/google-ux-design",skills:["UX","Figma","Wireframing","Prototyping","User Research","Usability Testing"]},
+  {id:47,title:"UI / UX Design Bootcamp",platform:"Udemy",category:"Design",level:"Beginner",rating:4.6,price:13,hours:29,url:"https://www.udemy.com/course/ui-ux-web-design-using-adobe-xd/",skills:["Adobe XD","Figma","UI Design","Color Theory","Typography","Prototyping"]},
+  {id:48,title:"Graphic Design Specialization",platform:"Coursera",category:"Design",level:"Beginner",rating:4.6,price:0,hours:50,url:"https://www.coursera.org/specializations/graphic-design",skills:["Photoshop","Illustrator","Typography","Layout","Branding","InDesign"]},
+  {id:49,title:"Figma UI Design – Full Course",platform:"freeCodeCamp",category:"Design",level:"Beginner",rating:4.7,price:0,hours:6,url:"https://www.youtube.com/watch?v=jwCmIBJ8Jtc",skills:["Figma","Components","Auto Layout","Prototyping","Design Systems"]},
+  {id:50,title:"Canva Design School",platform:"Canva",category:"Design",level:"Beginner",rating:4.5,price:0,hours:5,url:"https://www.canva.com/designschool/",skills:["Canva","Presentations","Social Media","Branding","Print Design"]},
+  {id:51,title:"Google Cybersecurity Certificate",platform:"Coursera",category:"Cybersecurity",level:"Beginner",rating:4.8,price:0,hours:80,url:"https://www.coursera.org/professional-certificates/google-cybersecurity",skills:["SIEM","Linux","Python","SQL","Network Security","Incident Response"]},
+  {id:52,title:"CompTIA Security+ (SY0-701) Prep",platform:"Udemy",category:"Cybersecurity",level:"Intermediate",rating:4.7,price:13,hours:32,url:"https://www.udemy.com/course/securityplus/",skills:["Network Security","Cryptography","Threats","Risk Management","Compliance"]},
+  {id:53,title:"Ethical Hacking Bootcamp",platform:"Udemy",category:"Cybersecurity",level:"Intermediate",rating:4.6,price:15,hours:35,url:"https://www.udemy.com/course/learn-ethical-hacking-from-scratch/",skills:["Kali Linux","Pen Testing","Metasploit","Network Hacking","Web App Hacking"]},
+  {id:54,title:"Cybersecurity for Beginners",platform:"Udemy",category:"Cybersecurity",level:"Beginner",rating:4.5,price:0,hours:9,url:"https://www.udemy.com/course/cybersecurity-for-absolute-beginners/",skills:["Security Basics","Threats","Passwords","Phishing","Privacy"]},
+  {id:55,title:"TryHackMe – Pre-Security Path",platform:"TryHackMe",category:"Cybersecurity",level:"Beginner",rating:4.8,price:0,hours:40,url:"https://tryhackme.com/path/outline/presecurity",skills:["Networking","Linux","Web Fundamentals","Cryptography","Windows","Bash"]},
+  {id:56,title:"Hack The Box Academy – SOC Analyst Path",platform:"Hack The Box",category:"Cybersecurity",level:"Intermediate",rating:4.7,price:0,hours:60,url:"https://academy.hackthebox.com/path/preview/soc-analyst",skills:["SIEM","Log Analysis","Phishing","DFIR","Network Traffic","Threat Intel"]},
+  {id:57,title:"OWASP Top 10 – Web Security",platform:"OWASP",category:"Cybersecurity",level:"Intermediate",rating:4.7,price:0,hours:8,url:"https://owasp.org/www-project-top-ten/",skills:["Web Security","XSS","SQL Injection","CSRF","IDOR","Broken Auth"]},
+  {id:58,title:"Business Analytics Specialization",platform:"Coursera",category:"Business",level:"Intermediate",rating:4.6,price:0,hours:55,url:"https://www.coursera.org/specializations/business-analytics",skills:["Excel","Regression","Visualization","Forecasting","Decision Making"]},
+  {id:59,title:"Google Digital Marketing Certificate",platform:"Coursera",category:"Business",level:"Beginner",rating:4.7,price:0,hours:40,url:"https://www.coursera.org/professional-certificates/google-digital-marketing-ecommerce",skills:["SEO","SEM","Email Marketing","Analytics","Social Media","E-commerce"]},
+  {id:60,title:"Financial Markets – Yale University",platform:"Coursera",category:"Business",level:"Beginner",rating:4.8,price:0,hours:33,url:"https://www.coursera.org/learn/financial-markets-global",skills:["Stocks","Bonds","Risk","Portfolio","Behavioral Finance","Options"]},
+  {id:61,title:"Google Project Management Certificate",platform:"Coursera",category:"Business",level:"Intermediate",rating:4.7,price:0,hours:50,url:"https://www.coursera.org/professional-certificates/google-project-management",skills:["Agile","Scrum","Waterfall","Risk Management","Stakeholders","Gantt Charts"]},
+  {id:62,title:"Excel Skills for Business Specialization",platform:"Coursera",category:"Business",level:"Beginner",rating:4.9,price:0,hours:35,url:"https://www.coursera.org/specializations/excel",skills:["Excel","Formulas","Pivot Tables","Charts","Macros","Data Analysis"]},
+  {id:63,title:"Entrepreneurship – Wharton Specialization",platform:"Coursera",category:"Business",level:"Intermediate",rating:4.7,price:0,hours:45,url:"https://www.coursera.org/specializations/wharton-entrepreneurship",skills:["Business Models","Funding","Launch","Growth","Finance","Leadership"]},
+  {id:64,title:"Introduction to Public Speaking",platform:"Coursera",category:"Business",level:"Beginner",rating:4.8,price:0,hours:20,url:"https://www.coursera.org/learn/public-speaking",skills:["Presentations","Storytelling","Delivery","Confidence","Structure","Persuasion"]}
+];
+
+// ── BROWSE ────────────────────────────────────────────────────────
+const CATS=["All","Programming","Web Dev","AI / ML","Data Science","Cloud","Design","Cybersecurity","Business"];
+const LVLS=["All","Beginner","Intermediate","Advanced"];
+let aC="All",aL="All",aP="all",dbt=null;
+function e(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}
+
+window.addEventListener("DOMContentLoaded",()=>{
+  bp();rf();
+  document.getElementById("sfree").textContent=COURSES.filter(c=>c.price===0).length;
+  initChat();
+  // Detect mode and update label
+  detectMode().then(isFlask=>{
+    const lbl=document.getElementById("mode-lbl");
+    if(lbl) lbl.textContent=isFlask?"Flask backend · localhost:5000":"Standalone · Gemini direct · 2 keys";
+  });
+});
+
+function sv(v){
+  ["b","a","m"].forEach(x=>document.getElementById("v"+x).classList.toggle("on",x===v));
+  document.querySelectorAll(".tab").forEach((b,i)=>b.classList.toggle("on",["b","a","m"][i]===v));
+  if(v==="m") loadML();
+}
+function bp(){
+  const cp=document.getElementById("cp"),lp=document.getElementById("lp"),pp=document.getElementById("pp");
+  CATS.forEach(c=>cp.appendChild(mkp(c,c===aC,"ac",()=>{aC=c;rp();rf()})));
+  LVLS.forEach(l=>lp.appendChild(mkp(l,l===aL,"ac",()=>{aL=l;rp();rf()})));
+  [["all","All"],["free","Free"],["paid","Paid"]].forEach(([v,lb])=>pp.appendChild(mkp(lb,v===aP,"ac2",()=>{aP=v;rp();rf()})));
+}
+function mkp(lb,on,cls,cb){const b=document.createElement("button");b.className="pill"+(on?" "+cls:"");b.textContent=lb;b.onclick=cb;return b}
+function rp(){
+  [...document.getElementById("cp").children].forEach((b,i)=>b.className="pill"+(CATS[i]===aC?" ac":""));
+  [...document.getElementById("lp").children].forEach((b,i)=>b.className="pill"+(LVLS[i]===aL?" ac":""));
+  const pv=["all","free","paid"];
+  [...document.getElementById("pp").children].forEach((b,i)=>b.className="pill"+(pv[i]===aP?" ac2":""));
+}
+function ul(){const h=parseInt(document.getElementById("hr").value);document.getElementById("hv").textContent=h>=120?"Any":h+"h";document.getElementById("rv").textContent=parseFloat(document.getElementById("rr").value).toFixed(1)+"+";}
+function dbnc(){clearTimeout(dbt);dbt=setTimeout(rf,220)}
+function rf(){
+  const q=document.getElementById("srch").value.trim().toLowerCase();
+  const mh=parseInt(document.getElementById("hr").value);
+  const mr=parseFloat(document.getElementById("rr").value);
+  const srt=document.getElementById("srt").value;
+  let list=COURSES.filter(c=>{
+    if(q&&!(c.title.toLowerCase().includes(q)||c.category.toLowerCase().includes(q)||c.platform.toLowerCase().includes(q)||c.skills.some(s=>s.toLowerCase().includes(q))))return false;
+    if(aC!=="All"&&c.category!==aC)return false;
+    if(aL!=="All"&&c.level!==aL)return false;
+    if(aP==="free"&&c.price!==0)return false;
+    if(aP==="paid"&&c.price===0)return false;
+    if(mh<120&&c.hours>mh)return false;
+    if(mr>4&&c.rating<mr)return false;
+    return true;
+  });
+  if(srt==="ha")list.sort((a,b)=>a.hours-b.hours);
+  else if(srt==="hd")list.sort((a,b)=>b.hours-a.hours);
+  else if(srt==="pa")list.sort((a,b)=>a.price-b.price);
+  else if(srt==="title")list.sort((a,b)=>a.title.localeCompare(b.title));
+  else list.sort((a,b)=>b.rating-a.rating);
+  document.getElementById("rc").textContent=list.length+" course"+(list.length!==1?"s":"");
+  const g=document.getElementById("grid");
+  if(!list.length){g.innerHTML='<div class="emp"><h3>No courses found</h3><p>Try broadening your filters.</p></div>';return}
+  const lm={Beginner:"B",Intermediate:"I",Advanced:"A"};
+  g.innerHTML=list.map((c,i)=>`<div class="card" style="animation-delay:${i*.03}s" onclick="window.open('${c.url}','_blank')">
+    <div class="ch"><span class="plt">${e(c.platform)}</span><span class="lv ${lm[c.level]||"B"}">${c.level}</span></div>
+    <div class="ccat">${e(c.category)}</div><div class="ctit">${e(c.title)}</div>
+    <div class="tags">${c.skills.slice(0,4).map(s=>`<span class="tag">${e(s)}</span>`).join("")}</div>
+    <div class="cmeta"><span>★ <b style="color:var(--am)">${c.rating.toFixed(1)}</b></span><span>⏱ ${c.hours}h</span><span style="color:${c.price===0?"var(--em)":"var(--t)"};font-weight:${c.price===0?600:400}">${c.price===0?"Free":"$"+c.price}</span></div>
+    <a class="enr" href="${c.url}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Enroll on ${e(c.platform)} →</a>
+  </div>`).join("");
+}
+
+// ── AI ADVISOR ────────────────────────────────────────────────────
+function initChat(){amsg("Hi! 👋 I'm your Gemini-powered course advisor. Tell me your background, what you want to learn, and your available time — I'll find the perfect courses for you!","ai");}
+function up(btn){document.getElementById("cinp").value=btn.textContent.trim();sc();}
+function amsg(txt,role,courses){
+  const w=document.getElementById("msgs");
+  const row=document.createElement("div");row.className="mrow "+role;
+  const av=document.createElement("div");av.className="mav";av.textContent=role==="user"?"U":"🎯";
+  const bub=document.createElement("div");bub.className="mbub";
+  bub.innerHTML=txt.replace(/\n/g,"<br>");
+  if(courses&&courses.length){
+    const cs=document.createElement("div");cs.className="mcs";
+    cs.innerHTML=courses.map(c=>`<div class="mc"><div class="mci"><div class="mct">${e(c.title)}</div><div class="mcm">${e(c.platform)} · ${c.level} · ${c.hours}h · ${c.price===0?'<span style="color:var(--em);font-weight:600">Free</span>':"$"+c.price}</div></div><a class="mcb" href="${c.url}" target="_blank" rel="noopener">Enroll →</a></div>`).join("");
+    bub.appendChild(cs);
+  }
+  if(role==="user"){row.appendChild(bub);row.appendChild(av);}
+  else{const wr=document.createElement("div");wr.appendChild(bub);row.appendChild(av);row.appendChild(wr);}
+  w.appendChild(row);w.scrollTop=w.scrollHeight;
+}
+function aty(){const id="t"+Date.now(),w=document.getElementById("msgs");const d=document.createElement("div");d.id=id;d.className="mrow ai";d.innerHTML='<div class="mav">🎯</div><div class="mbub"><div class="tdot"><span></span><span></span><span></span></div></div>';w.appendChild(d);w.scrollTop=w.scrollHeight;return id;}
+function rty(id){const el=document.getElementById(id);if(el)el.remove();}
+async function sc(){
+  const inp=document.getElementById("cinp"),btn=document.getElementById("csend");
+  const msg=inp.value.trim();if(!msg)return;
+  amsg(msg,"user");inp.value="";btn.disabled=true;
+  const tid=aty();
+  try{
+    const useFlask=await detectMode();
+    let reply="",courses=[];
+    if(useFlask){
+      const r=await fetch(FLASK_URL+"/api/recommend",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:msg})});
+      if(!r.ok)throw new Error("HTTP "+r.status);
+      const d=await r.json();
+      reply=d.reply||"Here are my recommendations!";
+      courses=d.courses||[];
+    } else {
+      // Standalone: call Gemini directly
+      const cat=COURSES.slice(0,40).map(c=>`[${c.id}] ${c.title} (${c.category}, ${c.level}, ${c.hours}h, ${c.price===0?"Free":"$"+c.price})`).join("\n");
+      const prompt=`You are CourseCompass AI. Recommend 2-4 courses.\n\nCourses:\n${cat}\n\nUser: ${msg}\n\nWrite a warm 2-3 sentence reply then:\nCOURSE_IDS:[id1,id2,id3]`;
+      const text=await callGeminiDirect(prompt);
+      const m=text.match(/COURSE_IDS:\s*\[([^\]]+)\]/);
+      const ids=m?m[1].split(",").map(x=>parseInt(x.trim())).filter(n=>!isNaN(n)):[];
+      reply=text.replace(/COURSE_IDS:\s*\[[^\]]*\]/,"").trim()||"Here are my recommendations!";
+      courses=COURSES.filter(c=>ids.includes(c.id));
+      if(!courses.length)courses=COURSES.slice(0,3);
+    }
+    rty(tid);amsg(reply,"ai",courses);
+  }catch(ex){
+    rty(tid);
+    const m=ex.message||"";
+    if(m.includes("429")||m.includes("quota")||m.includes("rate-limited")){
+      amsg("⚠ Gemini quota hit (429). Add more keys at https://aistudio.google.com/app/apikey","ai");
+    } else {
+      amsg("⚠ Error: "+m,"ai");
+    }
+  }
+  btn.disabled=false;inp.focus();
+}
+
+// ── ML INSIGHTS ───────────────────────────────────────────────────
+let crefs={},mlD=null,afc="AI / ML",agbRef=null;
+
+function dch(id){if(crefs[id]){crefs[id].destroy();delete crefs[id];}}
+
+async function loadML(){
+  if(mlD){return;}
+  try{
+    const useFlask=await detectMode();
+    if(useFlask){
+      const r=await fetch(FLASK_URL+"/api/ml/insights");
+      if(!r.ok)throw new Error("HTTP "+r.status);
+      mlD=await r.json();
+    } else {
+      // Standalone: compute entirely in JS — no network needed
+      mlD=buildMLDataJS();
+    }
+    renderML();
+  }catch(ex){
+    const m=ex.message||"";
+    const msg=m.includes("429")||m.includes("quota")
+      ? "Gemini quota hit (429) — add keys to GEMINI_KEYS"
+      : "Error loading ML data: "+m;
+    document.getElementById("kpis").innerHTML=`<div class="kpi" style="grid-column:1/-1;text-align:center;padding:30px"><div style="font-size:22px;margin-bottom:8px">⚠</div><div style="color:var(--rd);font-family:var(--fh);font-size:15px">${msg}</div><div style="color:var(--t2);font-size:11px;margin-top:10px">Get free keys: <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--cy)">aistudio.google.com/app/apikey</a></div><button onclick="mlD=null;loadML()" style="margin-top:12px;padding:8px 18px;border-radius:9px;border:1px solid var(--g3);background:var(--g1);color:var(--t2);cursor:pointer;font-family:var(--fb);font-size:12px">↺ Retry</button></div>`;
+  }
+}
+
+function renderML(){
+  const d=mlD;
+  const top=d.popularity[0];
+  const fastest=Object.keys(d.trend.model_stats).reduce((b,cat)=>{
+    const bg=(d.trend.forecast[b]?.[d.trend.forecast[b].length-1]||0)-(d.trend.history[b]?.[d.trend.history[b].length-1]||0);
+    const cg=(d.trend.forecast[cat]?.[d.trend.forecast[cat].length-1]||0)-(d.trend.history[cat]?.[d.trend.history[cat].length-1]||0);
+    return cg>bg?cat:b;
+  },Object.keys(d.trend.model_stats)[0]);
+
+  document.getElementById("kpis").innerHTML=[
+    {ico:"🏆",val:top.category.split(" ")[0],lbl:"Top Category",sub:"Score "+top.score},
+    {ico:"🚀",val:fastest.split(" ")[0],lbl:"Fastest Growing",sub:"↑ Explosive trend"},
+    {ico:"📚",val:d.total_courses,lbl:"Total Courses",sub:d.free_courses+" free ("+Math.round(d.free_courses/d.total_courses*100)+"%)"},
+    {ico:"🤖",val:"Poly²",lbl:"ML Model",sub:"Degree-2 Regression"}
+  ].map(k=>`<div class="kpi"><div class="kico">${k.ico}</div><div class="kval">${k.val}</div><div class="klbl">${k.lbl}</div><div class="ksub">${k.sub}</div></div>`).join("");
+
+  document.getElementById("agb").style.display="block";
+  document.getElementById("ml-main").style.display="block";
+
+  // Forecast buttons
+  document.getElementById("fbtns").innerHTML=Object.keys(d.trend.history).map(cat=>
+    `<button class="fb${cat===afc?" on":""}" onclick="selFC('${cat}')">${cat}</button>`
+  ).join("");
+
+  drawTrend(d);drawBar(d);drawPie(d);drawScatter(d);drawPop(d);drawHeatmap(d);
+  amlmsg("Hi! 👋 I'm your ML Analyst. I have full access to all forecast data and course stats. Ask me anything!","ai");
+}
+
+function selFC(cat){afc=cat;document.querySelectorAll(".fb").forEach(b=>b.classList.toggle("on",b.textContent===cat));drawTrend(mlD);}
+
+const TO={responsive:true,maintainAspectRatio:true,plugins:{legend:{labels:{color:"#94a3b8",font:{size:11}}},tooltip:{backgroundColor:"rgba(10,1,24,.92)",titleColor:"#f1f5f9",bodyColor:"#94a3b8",borderColor:"rgba(255,255,255,.1)",borderWidth:1}},scales:{x:{ticks:{color:"#475569",font:{size:9}},grid:{color:"rgba(255,255,255,.04)"}},y:{ticks:{color:"#475569",font:{size:9}},grid:{color:"rgba(255,255,255,.05)"}}}};
+
+function drawTrend(d){
+  dch("ct");
+  const hist=d.trend.history[afc],fore=d.trend.forecast[afc];
+  const labels=[...d.trend.months,...d.trend.forecast_months];
+  const hD=[...hist,...Array(fore.length).fill(null)];
+  const fD=[...Array(hist.length-1).fill(null),hist[hist.length-1],...fore];
+  const r2=d.trend.model_stats[afc].r2;
+  document.getElementById("r2bdg").textContent="● Polynomial Regression R² = "+r2+" for "+afc;
+  const col=CC[afc]||"#8b5cf6";
+  crefs["ct"]=new Chart(document.getElementById("ct").getContext("2d"),{type:"line",data:{labels,datasets:[
+    {label:"Historical",data:hD,borderColor:col,backgroundColor:col+"20",fill:true,tension:.4,pointRadius:2,borderWidth:2.5},
+    {label:"ML Forecast",data:fD,borderColor:"#f59e0b",backgroundColor:"#f59e0b10",fill:false,tension:.4,pointRadius:4,borderWidth:2,borderDash:[6,3]}
+  ]},options:{...TO,scales:{x:{ticks:{color:"#475569",maxTicksLimit:12,font:{size:9}},grid:{color:"rgba(255,255,255,.04)"}},y:{ticks:{color:"#475569",font:{size:9}},grid:{color:"rgba(255,255,255,.05)"},title:{display:true,text:"Monthly Enrollments",color:"#475569",font:{size:10}}}}}});
+}
+function drawBar(d){
+  dch("cb2");
+  const s=[...d.avg_ratings].sort((a,b)=>b.rating-a.rating);
+  crefs["cb2"]=new Chart(document.getElementById("cb2").getContext("2d"),{type:"bar",data:{labels:s.map(x=>x.category),datasets:[{label:"Avg Rating",data:s.map(x=>x.rating),backgroundColor:s.map(x=>(CC[x.category]||"#8b5cf6")+"bb"),borderColor:s.map(x=>CC[x.category]||"#8b5cf6"),borderWidth:1.5,borderRadius:6}]},options:{...TO,plugins:{legend:{display:false},tooltip:TO.plugins.tooltip},scales:{x:{ticks:{color:"#475569",font:{size:9}},grid:{display:false}},y:{min:4.3,ticks:{color:"#475569",font:{size:9}},grid:{color:"rgba(255,255,255,.05)"}}}}});
+}
+function drawPie(d){
+  dch("cp2");
+  const en=d.category_distribution;
+  crefs["cp2"]=new Chart(document.getElementById("cp2").getContext("2d"),{type:"doughnut",data:{labels:en.map(x=>x.category),datasets:[{data:en.map(x=>x.count),backgroundColor:en.map(x=>(CC[x.category]||"#8b5cf6")+"cc"),borderColor:en.map(x=>CC[x.category]||"#8b5cf6"),borderWidth:2,hoverOffset:8}]},options:{responsive:true,maintainAspectRatio:true,cutout:"58%",plugins:{legend:{position:"right",labels:{color:"#94a3b8",font:{size:10},padding:8,boxWidth:10}},tooltip:TO.plugins.tooltip}}});
+}
+function drawScatter(d){
+  dch("csc");
+  const lc={Beginner:"#10b981",Intermediate:"#f59e0b",Advanced:"#ec4899"};
+  crefs["csc"]=new Chart(document.getElementById("csc").getContext("2d"),{type:"scatter",data:{datasets:["Beginner","Intermediate","Advanced"].map(lvl=>({label:lvl,data:d.scatter.filter(c=>c.level===lvl).map(c=>({x:c.hours,y:c.rating,label:c.title.slice(0,26)})),backgroundColor:lc[lvl]+"99",borderColor:lc[lvl],pointRadius:6,pointHoverRadius:9,borderWidth:1.5}))},options:{...TO,plugins:{...TO.plugins,tooltip:{...TO.plugins.tooltip,callbacks:{label:ctx=>`${ctx.raw.label} — ${ctx.raw.x}h ★${ctx.raw.y}`}}},scales:{x:{title:{display:true,text:"Hours",color:"#475569",font:{size:10}},ticks:{color:"#475569",font:{size:9}},grid:{color:"rgba(255,255,255,.05)"}},y:{min:4.3,title:{display:true,text:"Rating",color:"#475569",font:{size:10}},ticks:{color:"#475569",font:{size:9}},grid:{color:"rgba(255,255,255,.05)"}}}}}); 
+}
+function drawPop(d){
+  const mx=d.popularity[0].score;
+  document.getElementById("popl").innerHTML=d.popularity.map((p,i)=>`<div class="prow"><div class="prk">#${i+1}</div><div class="pbw"><div class="pbar" style="width:${Math.round(p.score/mx*100)}%;background:linear-gradient(90deg,${CC[p.category]||"#8b5cf6"},${CC[p.category]||"#8b5cf6"}55)"></div></div><div class="pcat" style="color:${CC[p.category]||"#94a3b8"}">${p.category}</div><div class="psc">${p.score}</div></div>`).join("");
+}
+function drawHeatmap(d){
+  const sk=d.heatmap.skills,mt=d.heatmap.matrix,mx=Math.max(...mt.flat());
+  let h='<table class="hmt"><thead><tr><th class="rh"></th>'+sk.map(s=>`<th>${s.slice(0,7)}</th>`).join("")+'</tr></thead><tbody>';
+  mt.forEach((row,i)=>{
+    h+=`<tr><th class="rh">${sk[i].slice(0,10)}</th>`;
+    row.forEach((val,j)=>{const a=i===j?.88:val/mx;const col=i===j?"#8b5cf6":"#06b6d4";const bg=col+Math.round(a*255).toString(16).padStart(2,"0");const tc=a>.5?"#f1f5f9":"#475569";h+=`<td style="background:${bg};color:${tc}" title="${sk[i]} + ${sk[j]}: ${val}">${val}</td>`;});
+    h+='</tr>';
+  });
+  document.getElementById("hmw").innerHTML=h+'</tbody></table>';
+}
+
+// ── AI GRAPH BUILDER ─────────────────────────────────────────────
+function setAgb(btn){document.getElementById("agb-inp").value=btn.textContent.trim();genGraph();}
+async function genGraph(){
+  const inp=document.getElementById("agb-inp"),btn=document.getElementById("agb-btn");
+  const req=inp.value.trim();if(!req)return;
+  btn.disabled=true;
+  const res=document.getElementById("agb-result");
+  res.style.display="block";
+  res.innerHTML='<div class="agb-loading"><div class="spin"></div>Gemini is generating your graph…</div>';
+  try{
+    const useFlask=await detectMode();
+    let cfg;
+    if(useFlask){
+      const r=await fetch(FLASK_URL+"/api/ml/generate-graph",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({request:req})});
+      if(!r.ok)throw new Error("HTTP "+r.status);
+      const d=await r.json();
+      if(!d.success)throw new Error(d.error||"Generation failed");
+      cfg=d.config;
+    } else {
+      // Standalone: call Gemini directly for graph config
+      const d2=mlD||buildMLDataJS();
+      const avgR={};d2.avg_ratings.forEach(x=>avgR[x.category]=x.rating);
+      const catCnt={};d2.category_distribution.forEach(x=>catCnt[x.category]=x.count);
+      const forecasts={};Object.keys(EH).forEach(cat=>{const {pred}=jsForecast(cat);forecasts[cat]=pred;});
+      const prompt=`You are a data viz expert. User wants: ${req}
+
+Data available:
+- Category counts: ${JSON.stringify(catCnt)}
+- Avg ratings: ${JSON.stringify(avgR)}
+- Popularity scores: ${JSON.stringify(Object.fromEntries(d2.popularity.map(p=>[p.category,p.score])))}
+- 6-month forecasts: ${JSON.stringify(Object.fromEntries(Object.keys(forecasts).map(k=>[k,forecasts[k]])))}
+
+Return ONLY valid JSON (no markdown) with this structure:
+{"title":"...","subtitle":"...","type":"bar|line|doughnut|scatter|radar","labels":[...],"datasets":[{"label":"...","data":[...],"backgroundColor":"...","borderColor":"...","fill":false}]}`;
+      const text=await callGeminiDirect(prompt);
+      const clean=text.replace(/^\`\`\`[a-z]*\n?/,'').replace(/\`\`\`$/,'').trim();
+      cfg=JSON.parse(clean);
+    }
+    if(agbRef){agbRef.destroy();agbRef=null;}
+    res.innerHTML=`<div class="agb-chart-title">${cfg.title||"Generated Chart"}</div><div class="agb-chart-sub">${cfg.subtitle||req}</div><div class="agb-wrap"><canvas id="agb-canvas"></canvas></div>`;
+    const datasets=(cfg.datasets||[]).map((ds,i)=>{
+      const cols=["#8b5cf6","#ec4899","#06b6d4","#10b981","#f59e0b","#ef4444","#a78bfa","#34d399"];
+      if(!ds.backgroundColor)ds.backgroundColor=cols[i%cols.length]+"99";
+      if(!ds.borderColor)ds.borderColor=cols[i%cols.length];
+      return ds;
+    });
+    const chartOpts={responsive:true,maintainAspectRatio:true,plugins:{legend:{labels:{color:"#94a3b8",font:{size:11}}},tooltip:{backgroundColor:"rgba(10,1,24,.92)",titleColor:"#f1f5f9",bodyColor:"#94a3b8",borderColor:"rgba(255,255,255,.1)",borderWidth:1}},scales:{}};
+    if(cfg.type!=="doughnut"&&cfg.type!=="radar"&&cfg.type!=="pie"){
+      chartOpts.scales={x:{ticks:{color:"#475569",font:{size:9}},grid:{color:"rgba(255,255,255,.04)"}},y:{ticks:{color:"#475569",font:{size:9}},grid:{color:"rgba(255,255,255,.05)"}}};
+    }
+    if(cfg.type==="radar"){chartOpts.scales={r:{ticks:{color:"#475569",backdropColor:"transparent"},grid:{color:"rgba(255,255,255,.1)"},pointLabels:{color:"#94a3b8",font:{size:10}}}};}
+    agbRef=new Chart(document.getElementById("agb-canvas").getContext("2d"),{type:cfg.type||"bar",data:{labels:cfg.labels||[],datasets},options:chartOpts});
+  }catch(ex){
+    const msg=ex.message||"";
+    let hint="";
+    if(msg.includes("429")||msg.includes("quota")||msg.includes("rate")||msg.includes("exhausted")){
+      hint="⚠ Gemini quota hit (429) — Add a new key at <a href='https://aistudio.google.com/app/apikey' target='_blank' style='color:var(--cy)'>aistudio.google.com</a> and add it to GEMINI_KEYS in app.py";
+    } else if(msg.includes("Failed to fetch")||msg.includes("NetworkError")||msg.includes("ERR_CONNECTION")){
+      hint="⚠ Cannot reach Flask — run: <code>python app.py</code>";
+    } else {
+      hint="⚠ "+msg;
+    }
+    res.innerHTML=`<div class="agb-err">${hint}</div>`;
+  }
+  btn.disabled=false;
+}
+
+// ── ML CHAT ───────────────────────────────────────────────────────
+function amlmsg(txt,role){
+  const w=document.getElementById("mlmsgs");
+  const row=document.createElement("div");row.className="mrow "+role;
+  const av=document.createElement("div");av.className="mav";av.textContent=role==="user"?"U":"📊";
+  if(role==="user")av.style.background="linear-gradient(135deg,var(--cy),var(--v))";
+  const bub=document.createElement("div");bub.className="mbub";
+  if(role==="user")bub.style.background="linear-gradient(135deg,var(--cy),var(--v))";
+  bub.innerHTML=txt.replace(/\n/g,"<br>");
+  if(role==="user"){row.appendChild(bub);row.appendChild(av);}
+  else{const wr=document.createElement("div");wr.appendChild(bub);row.appendChild(av);row.appendChild(wr);}
+  w.appendChild(row);w.scrollTop=w.scrollHeight;
+}
+function amlt(){const id="mlt"+Date.now(),w=document.getElementById("mlmsgs");const d=document.createElement("div");d.id=id;d.className="mrow ai";d.innerHTML='<div class="mav">📊</div><div class="mbub"><div class="tdot"><span></span><span></span><span></span></div></div>';w.appendChild(d);w.scrollTop=w.scrollHeight;return id;}
+function mla(btn){document.getElementById("mlci").value=btn.textContent.trim();sml();}
+async function sml(){
+  const inp=document.getElementById("mlci"),btn=document.getElementById("mlcs");
+  const msg=inp.value.trim();if(!msg)return;
+  amlmsg(msg,"user");inp.value="";btn.disabled=true;
+  const tid=amlt();
+  try{
+    const useFlask=await detectMode();
+    let reply="";
+    if(useFlask){
+      const r=await fetch(FLASK_URL+"/api/ml/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:msg})});
+      if(!r.ok)throw new Error("HTTP "+r.status);
+      const d=await r.json();
+      reply=d.reply||"No response";
+    } else {
+      const ctx=buildMLContext(mlD||buildMLDataJS());
+      const prompt=`You are an ML Insights analyst for CourseCompass.\n\n${ctx}\n\nUser: ${msg}\n\nAnswer concisely with specific numbers. Max 100 words.`;
+      reply=await callGeminiDirect(prompt);
+    }
+    rty(tid);amlmsg(reply.trim(),"ai");
+  }catch(ex){
+    rty(tid);
+    const m=ex.message||"";
+    if(m.includes("429")||m.includes("quota")||m.includes("rate-limited")){
+      amlmsg("⚠ Gemini quota hit (429).\nGet free keys: https://aistudio.google.com/app/apikey","ai");
+    } else {
+      amlmsg("⚠ Error: "+m,"ai");
+    }
+  }
+  btn.disabled=false;inp.focus();
+}
+</script>
+</body>
+</html> 
